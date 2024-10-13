@@ -15,7 +15,6 @@ import ru.iuribabalin.model.soap.SearchEmployeesResponseModel;
 
 import javax.annotation.Resource;
 import javax.sql.DataSource;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -47,7 +46,7 @@ public class EmployeeServiceImpl {
             Department department,
             @WebParam(name = "data")
             String data
-    ) throws ParseException, SQLException {
+    ) throws ParseException {
         StringBuilder query = new StringBuilder("SELECT * FROM Employees WHERE 1=1");
         List<Object> params = new ArrayList<>();
         addStringParam(firstName, "first_name", query, params);
