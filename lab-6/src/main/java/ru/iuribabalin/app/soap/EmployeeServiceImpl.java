@@ -1,10 +1,15 @@
 package ru.iuribabalin.app.soap;
 
+import jakarta.annotation.Resource;
 import jakarta.jws.WebMethod;
 import jakarta.jws.WebParam;
 import jakarta.jws.WebResult;
 import jakarta.jws.WebService;
 import jakarta.jws.soap.SOAPBinding;
+import jakarta.xml.soap.SOAPFactory;
+import jakarta.xml.soap.SOAPFault;
+import jakarta.xml.ws.WebServiceContext;
+import jakarta.xml.ws.handler.MessageContext;
 import lombok.extern.slf4j.Slf4j;
 import ru.iuribabalin.app.domain.DatabaseExecutor;
 import ru.iuribabalin.app.domain.Employee;
@@ -17,10 +22,13 @@ import ru.iuribabalin.model.soap.EmployeeSearchResponse;
 import ru.iuribabalin.model.soap.SearchEmployeesResponseModel;
 
 import javax.sql.DataSource;
+import javax.xml.namespace.QName;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @WebService(serviceName = "EmployeeService", portName = "EmployeeServicePort")
@@ -30,6 +38,9 @@ public class EmployeeServiceImpl {
     private static final SimpleDateFormat DATA_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     private final DatabaseExecutor databaseExecutor;
+
+    @Resource
+    private WebServiceContext wsContext;
 
     public EmployeeServiceImpl(DataSource dataSource) {
         this.databaseExecutor = new DatabaseExecutor(dataSource);
@@ -49,6 +60,7 @@ public class EmployeeServiceImpl {
             @WebParam(name = "data")
             String data
     ) throws EmployeeServiceException {
+        auth();
         try {
             StringBuilder query = new StringBuilder("SELECT * FROM Employees WHERE 1=1");
             List<Object> params = new ArrayList<>();
@@ -170,6 +182,35 @@ public class EmployeeServiceImpl {
                 .hireDate(DATA_FORMAT.format(employee.getHireDate()))
                 .build();
     }
+
+    private void auth() throws EmployeeServiceException {
+        MessageContext messageContext = wsContext.getMessageContext();
+        Map<String, List<String>> httpHeaders = (Map<String, List<String>>) messageContext.get(MessageContext.HTTP_REQUEST_HEADERS);
+
+        List<String> authHeaders = httpHeaders.get("Authorization");
+        if (authHeaders != null && !authHeaders.isEmpty()) {
+            String authHeader = authHeaders.get(0);
+            if (authHeader.startsWith("Basic ")) {
+                String base64Credentials = authHeader.substring("Basic ".length()).trim();
+                String credentials = new String(Base64.getDecoder().decode(base64Credentials));
+                String[] userDetails = credentials.split(":", 2);
+                String username = userDetails[0];
+                String password = userDetails[1];
+                if (authenticateUser(username, password)) {
+                    log.info("Пользователь аутентифицирован: " + username);
+                } else {
+                    throw new EmployeeServiceException("Аутентификация не пройдена", 401);
+                }
+            }
+        } else {
+            throw new EmployeeServiceException("Отсутствуют данные аутентификации", 401);
+        }
+    }
+
+    private boolean authenticateUser(String username, String password) {
+        return "test".equals(username) && "password".equals(password);
+    }
+
 }
 
 

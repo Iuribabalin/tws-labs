@@ -1,6 +1,7 @@
 package ru.iuribabalin.command;
 
 import ru.iuribabalin.app.soap.EmployeeService;
+import ru.iuribabalin.app.soap.EmployeeServiceImpl;
 import ru.iuribabalin.client.WebClientImpl;
 import ru.iuribabalin.command.impl.ExitCommandImpl;
 import ru.iuribabalin.command.impl.HelpCommandImpl;
@@ -13,12 +14,15 @@ import ru.iuribabalin.command.impl.soap.CreateCommandImpl;
 import ru.iuribabalin.command.impl.soap.DeleteCommandImpl;
 import ru.iuribabalin.command.impl.soap.SearchCommandImpl;
 import ru.iuribabalin.command.impl.soap.UpdateCommandImpl;
+import ru.iuribabalin.command.impl.soap.handler.AuthorizationHandler;
 
+import javax.xml.ws.BindingProvider;
+import javax.xml.ws.handler.Handler;
 import java.util.*;
 
 public class CommandAnalyzer {
 
-    private static Protocol protocol = Protocol.REST;
+    private static Protocol protocol = Protocol.SOAP;
 
     private static WebClientImpl client = new WebClientImpl();
 
@@ -26,10 +30,17 @@ public class CommandAnalyzer {
 
     public CommandAnalyzer() {
         EmployeeService service = new EmployeeService();
-        SearchCommandImpl searchCommand = new SearchCommandImpl(service.getEmployeeServicePort());
-        DeleteCommandImpl deleteCommand = new DeleteCommandImpl(service.getEmployeeServicePort());
-        CreateCommandImpl createCommand = new CreateCommandImpl(service.getEmployeeServicePort());
-        UpdateCommandImpl updateCommand = new UpdateCommandImpl(service.getEmployeeServicePort());
+        EmployeeServiceImpl employeeService = service.getEmployeeServicePort();
+        List<Handler> handlerList = ((BindingProvider) employeeService).getBinding().getHandlerChain();
+        if (handlerList == null) {
+            handlerList = new ArrayList<>();
+        }
+        handlerList.add(new AuthorizationHandler("test", "password"));
+        ((BindingProvider) employeeService).getBinding().setHandlerChain(handlerList);
+        SearchCommandImpl searchCommand = new SearchCommandImpl(employeeService);
+        DeleteCommandImpl deleteCommand = new DeleteCommandImpl(employeeService);
+        CreateCommandImpl createCommand = new CreateCommandImpl(employeeService);
+        UpdateCommandImpl updateCommand = new UpdateCommandImpl(employeeService);
         SearchCommandRestImpl searchRestCommand = new SearchCommandRestImpl(client);
         DeleteCommandRestImpl deleteRestCommand = new DeleteCommandRestImpl(client);
         CreateCommandRestImpl createRestCommand = new CreateCommandRestImpl(client);

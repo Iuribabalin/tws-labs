@@ -38,8 +38,8 @@ public class SearchCommandImpl implements CommandHandler {
         } else {
             System.out.println(employees);
         }
-
     }
+
 
     @Override
     public Command getName() {

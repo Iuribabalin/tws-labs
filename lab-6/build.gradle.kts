@@ -12,15 +12,13 @@ repositories {
 }
 
 dependencies {
-    implementation("jakarta.ws.rs:jakarta.ws.rs-api:3.0.0")
+
     implementation("org.glassfish.jersey.containers:jersey-container-servlet-core:3.1.9")
-    implementation("org.glassfish.jersey.media:jersey-media-json-jackson:3.1.9")
-    implementation("org.glassfish.jersey.inject:jersey-hk2:3.1.9")
-    implementation("jakarta.json.bind:jakarta.json.bind-api:2.0.0")
+    implementation("org.glassfish.jersey.media:jersey-media-json-processing:3.1.9")
     implementation("org.glassfish.jersey.inject:jersey-hk2:3.1.9")
     implementation("org.glassfish:jakarta.json:2.0.1")
+
     implementation("jakarta.xml.bind:jakarta.xml.bind-api:3.0.1")
-    implementation("org.glassfish.jaxb:jaxb-runtime:3.0.1")
 
     implementation("com.sun.xml.ws:jaxws-rt:3.0.0")
     implementation("jakarta.jws:jakarta.jws-api:3.0.0")

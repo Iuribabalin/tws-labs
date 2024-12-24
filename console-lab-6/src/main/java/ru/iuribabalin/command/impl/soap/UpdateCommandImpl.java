@@ -1,8 +1,8 @@
 package ru.iuribabalin.command.impl.soap;
 
-import ru.iuribabalin.app.model.EmployeeResponse;
 import ru.iuribabalin.app.soap.EmployeeServiceException_Exception;
 import ru.iuribabalin.app.soap.EmployeeServiceImpl;
+import ru.iuribabalin.app.model.EmployeeResponse;
 import ru.iuribabalin.command.Command;
 import ru.iuribabalin.command.CommandHandler;
 import ru.iuribabalin.command.Key;
@@ -12,7 +12,6 @@ import ru.iuribabalin.model.Employee;
 
 import java.text.ParseException;
 import java.util.Map;
-
 
 public class UpdateCommandImpl implements CommandHandler {
 

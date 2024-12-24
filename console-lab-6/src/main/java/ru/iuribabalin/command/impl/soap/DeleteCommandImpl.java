@@ -12,7 +12,6 @@ import ru.iuribabalin.model.Employee;
 import java.text.ParseException;
 import java.util.Map;
 
-
 public class DeleteCommandImpl implements CommandHandler {
 
     private final EmployeeServiceImpl employeeService;
@@ -24,11 +23,7 @@ public class DeleteCommandImpl implements CommandHandler {
     @Override
     public void execute(Map<Key, String> params) throws EmployeeServiceException_Exception, ParseException {
         Employee employee = EmployeeMapper.mapKeysToEmployee(params);
-        if (employee.getId() != null) {
-            employeeService.delete(employee.getId());
-        } else {
-            throw new RuntimeException("Id is null");
-        }
+        employeeService.delete(employee.getId());
     }
 
     @Override

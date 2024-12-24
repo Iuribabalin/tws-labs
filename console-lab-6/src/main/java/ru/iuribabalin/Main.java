@@ -31,8 +31,7 @@ public class Main {
                         throw new RuntimeException("Command " + commandName + " not found");
                     }
                 } catch (EmployeeServiceException_Exception soapClientException) {
-                    redPrint("status: " + soapClientException.getFaultInfo().getErrorDto().getStatus()
-                            + ", message: " + soapClientException.getFaultInfo().getMessage());
+                    redPrint(soapClientException.getFaultInfo().getMessage());
                 } catch (ClientException clientException) {
                     redPrint("Request status: " + clientException.getCode() + ", message: " + clientException.getMessage());
                 } catch (Exception e) {

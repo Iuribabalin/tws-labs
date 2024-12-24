@@ -1,6 +1,7 @@
 package ru.iuribabalin.command.impl.rest;
 
 import ru.iuribabalin.client.WebClientImpl;
+import ru.iuribabalin.client.exception.ClientException;
 import ru.iuribabalin.client.model.Department;
 import ru.iuribabalin.client.model.Position;
 import ru.iuribabalin.command.Command;
@@ -26,7 +27,7 @@ public class SearchCommandRestImpl implements CommandHandler {
     }
 
     @Override
-    public void execute(Map<Key, String> params) throws ParseException, URISyntaxException, IOException, InterruptedException {
+    public void execute(Map<Key, String> params) throws ParseException, URISyntaxException, IOException, InterruptedException, ClientException {
         Employee employee = EmployeeMapper.mapKeysToEmployee(params);
         String employees = Optional.ofNullable(
                         client.search(employee.getFirstName(), employee.getLastName(),

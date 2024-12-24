@@ -36,4 +36,5 @@ public class HelpCommandImpl implements CommandHandler {
     public Protocol getProtocol() {
         return Protocol.NO;
     }
+
 }
