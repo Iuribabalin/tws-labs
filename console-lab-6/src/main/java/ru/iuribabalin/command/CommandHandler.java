@@ -14,4 +14,14 @@ public interface CommandHandler {
     Command getName();
 
     Protocol getProtocol();
+
+    static Void exceptionHandler(Throwable ex) {
+        if (ex.getCause() instanceof ClientException) {
+            ClientException clientEx = (ClientException) ex.getCause();
+            System.err.println("Ошибка клиента: " + clientEx.getMessage() + ", код: " + clientEx.getCode());
+        } else {
+            System.err.println("Ошибка при выполнении асинхронного запроса: " + ex.getMessage());
+        }
+        return null;
+    }
 }

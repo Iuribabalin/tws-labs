@@ -1,9 +1,8 @@
 package ru.iuribabalin.command.impl.rest;
 
 
-import ru.iuribabalin.app.soap.EmployeeServiceException_Exception;
 import ru.iuribabalin.client.WebClientImpl;
-import ru.iuribabalin.client.exception.ClientException;
+import ru.iuribabalin.client.model.EmployeeRequestDto;
 import ru.iuribabalin.client.model.EmployeeResponseDto;
 import ru.iuribabalin.command.Command;
 import ru.iuribabalin.command.CommandHandler;
@@ -16,6 +15,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class UpdateCommandRestImpl implements CommandHandler {
 
@@ -26,11 +26,16 @@ public class UpdateCommandRestImpl implements CommandHandler {
     }
 
     @Override
-    public void execute(Map<Key, String> params) throws EmployeeServiceException_Exception, ParseException, URISyntaxException, IOException, InterruptedException, ClientException {
+    public void execute(Map<Key, String> params) throws ParseException, URISyntaxException, IOException {
         Employee employee = EmployeeMapper.mapKeysToEmployee(params);
-        EmployeeResponseDto response =
-                client.updateEmployee(employee.getId(), EmployeeMapper.mapToRestRequestCreate(employee));
-        System.out.println(EmployeeMapper.mapToString(response));
+        if (employee.getId() == null) {
+            throw new IllegalArgumentException("ID сотрудника не может быть null");
+        }
+        EmployeeRequestDto requestDto = EmployeeMapper.mapToRestRequestCreate(employee);
+        CompletableFuture<EmployeeResponseDto> futureResponse = client.updateEmployeeAsync(employee.getId(), requestDto);
+        futureResponse.thenAccept(response -> {
+            System.out.println(EmployeeMapper.mapToString(response));
+        }).exceptionally(CommandHandler::exceptionHandler);
     }
 
     @Override

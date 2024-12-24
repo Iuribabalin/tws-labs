@@ -2,7 +2,6 @@ package ru.iuribabalin.command.impl.soap;
 
 import ru.iuribabalin.app.soap.EmployeeServiceException_Exception;
 import ru.iuribabalin.app.soap.EmployeeServiceImpl;
-import ru.iuribabalin.app.model.EmployeeResponse;
 import ru.iuribabalin.command.Command;
 import ru.iuribabalin.command.CommandHandler;
 import ru.iuribabalin.command.Key;
@@ -12,6 +11,9 @@ import ru.iuribabalin.model.Employee;
 
 import java.text.ParseException;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class UpdateCommandImpl implements CommandHandler {
 
@@ -23,10 +25,20 @@ public class UpdateCommandImpl implements CommandHandler {
 
     @Override
     public void execute(Map<Key, String> params) throws EmployeeServiceException_Exception, ParseException {
-        Employee employee = EmployeeMapper.mapKeysToEmployee(params);
-        EmployeeResponse response =
-                employeeService.update(employee.getId(), EmployeeMapper.mapToRequestCreate(employee));
-        System.out.println(EmployeeMapper.mapToString(response));
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                Employee employee = EmployeeMapper.mapKeysToEmployee(params);
+                return employeeService.update(employee.getId(), EmployeeMapper.mapToRequestCreate(employee));
+            } catch (EmployeeServiceException_Exception | ParseException e) {
+                throw new RuntimeException(e);
+            }
+        }, executor).thenAccept(response -> {
+            System.out.println(EmployeeMapper.mapToString(response));
+        }).exceptionally(ex -> {
+            System.err.println("Ошибка при обновлении сотрудника: " + ex.getMessage());
+            return null;
+        }).whenComplete((result, ex) -> executor.shutdown());
     }
 
     @Override

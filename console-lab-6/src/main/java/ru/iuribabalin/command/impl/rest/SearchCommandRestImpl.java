@@ -3,6 +3,7 @@ package ru.iuribabalin.command.impl.rest;
 import ru.iuribabalin.client.WebClientImpl;
 import ru.iuribabalin.client.exception.ClientException;
 import ru.iuribabalin.client.model.Department;
+import ru.iuribabalin.client.model.EmployeeSearchResponseDto;
 import ru.iuribabalin.client.model.Position;
 import ru.iuribabalin.command.Command;
 import ru.iuribabalin.command.CommandHandler;
@@ -17,6 +18,7 @@ import java.text.ParseException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class SearchCommandRestImpl implements CommandHandler {
@@ -29,26 +31,25 @@ public class SearchCommandRestImpl implements CommandHandler {
     @Override
     public void execute(Map<Key, String> params) throws ParseException, URISyntaxException, IOException, InterruptedException, ClientException {
         Employee employee = EmployeeMapper.mapKeysToEmployee(params);
-        String employees = Optional.ofNullable(
-                        client.search(employee.getFirstName(), employee.getLastName(),
-                                employee.getPosition() != null
-                                        ? Position.valueOf(employee.getPosition().name())
-                                        : null,
-                                employee.getDepartment() != null
-                                        ? Department.valueOf(employee.getDepartment().name())
-                                        : null,
-                                employee.getHireDate()
-                        ).getResponseModelList()
-                ).stream()
-                .flatMap(Collection::stream)
-                .map(EmployeeMapper::mapToString)
-                .collect(Collectors.joining("\n"));
-        if (employees.isEmpty()) {
-            System.out.println("Нет сотрудников, соответствующих заданным параметрам.");
-        } else {
-            System.out.println(employees);
-        }
+        CompletableFuture<EmployeeSearchResponseDto> futureResponse =
+                client.searchAsync(employee.getFirstName(), employee.getLastName(),
+                        employee.getPosition() != null ? Position.valueOf(employee.getPosition().name()) : null,
+                        employee.getDepartment() != null ? Department.valueOf(employee.getDepartment().name()) : null,
+                        employee.getHireDate()
+                );
+        futureResponse.thenAccept(response -> {
+            String employees = Optional.ofNullable(response.getResponseModelList())
+                    .stream()
+                    .flatMap(Collection::stream)
+                    .map(EmployeeMapper::mapToString).collect(Collectors.joining("\n"));
 
+            if (employees.isEmpty()) {
+                System.out.println("Нет сотрудников, соответствующих заданным параметрам.");
+            } else {
+                System.out.println(employees);
+            }
+        }).exceptionally(CommandHandler::exceptionHandler);
+        ;
     }
 
     @Override

@@ -1,8 +1,7 @@
 package ru.iuribabalin.command.impl.rest;
 
-import ru.iuribabalin.app.soap.EmployeeServiceException_Exception;
 import ru.iuribabalin.client.WebClientImpl;
-import ru.iuribabalin.client.exception.ClientException;
+import ru.iuribabalin.client.model.EmployeeRequestDto;
 import ru.iuribabalin.client.model.EmployeeResponseDto;
 import ru.iuribabalin.command.Command;
 import ru.iuribabalin.command.CommandHandler;
@@ -14,6 +13,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class CreateCommandRestImpl implements CommandHandler {
 
@@ -24,10 +24,12 @@ public class CreateCommandRestImpl implements CommandHandler {
     }
 
     @Override
-    public void execute(Map<Key, String> params) throws EmployeeServiceException_Exception, ParseException, URISyntaxException, IOException, InterruptedException, ClientException {
-        EmployeeResponseDto employeeResponse =
-                client.create(EmployeeMapper.mapToRestRequestCreate(EmployeeMapper.mapKeysToEmployee(params)));
-        System.out.println(EmployeeMapper.mapToString(employeeResponse));
+    public void execute(Map<Key, String> params) throws ParseException, URISyntaxException, IOException {
+        EmployeeRequestDto requestDto = EmployeeMapper.mapToRestRequestCreate(EmployeeMapper.mapKeysToEmployee(params));
+        CompletableFuture<EmployeeResponseDto> futureResponse = client.createAsync(requestDto);
+        futureResponse.thenAccept(employeeResponse -> {
+            System.out.println(EmployeeMapper.mapToString(employeeResponse));
+        }).exceptionally(CommandHandler::exceptionHandler);
     }
 
     @Override
